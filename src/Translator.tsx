@@ -6,6 +6,42 @@ export default function Translator() {
   const [output, setOutput] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 🎙 Voice Input
+  const handleVoiceInput = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition not supported in your browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.start();
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(transcript);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+    };
+  };
+
+  // 🔊 Voice Output
+  const speakOutput = () => {
+    if (!output) return;
+    const utterance = new SpeechSynthesisUtterance(output);
+    utterance.lang = "en-US";
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // 🔄 Translate
   const handleTranslate = async (type: "genz" | "english") => {
     if (!input.trim()) return;
     setLoading(true);
@@ -31,7 +67,7 @@ export default function Translator() {
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your sentence here..."
+            placeholder="Type or speak your sentence..."
             className="w-full p-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none h-32"
           />
 
@@ -47,6 +83,23 @@ export default function Translator() {
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
             >
               🔤 Convert to English
+            </button>
+          </div>
+
+          {/* 🎙 Voice Input + 🔊 Speak Output */}
+          <div className="flex justify-center gap-4 mt-4">
+            <button
+              onClick={handleVoiceInput}
+              className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition"
+            >
+              🎙 Speak
+            </button>
+            <button
+              onClick={speakOutput}
+              disabled={!output}
+              className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition"
+            >
+              🔊 Listen
             </button>
           </div>
 
